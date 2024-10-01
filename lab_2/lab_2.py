@@ -84,7 +84,7 @@ class ForwardKinematics(Node):
         T_2_3 = translation(0, -0.0494, 0.0685) @ rotation_y(pi/2) @rotation_z(theta3)
 
         # T_3_ee (leg_front_r_3 to end-effector)
-        T_3_ee = translation(0.06231, 0, 0.018)
+        T_3_ee = translation(0.06231, -.06216, 0.018)
 
         # Compute the final transformation
         T_0_ee = T_0_1 @ T_1_2 @ T_2_3 @ T_3_ee
