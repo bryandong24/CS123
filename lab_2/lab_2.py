@@ -78,7 +78,7 @@ class ForwardKinematics(Node):
         T_0_1 = translation(0.07500, -0.0445, 0) @ rotation_x(pi/2) @ rotation_z(theta1)
 
         # T_1_2 (leg_front_r_1 to leg_front_r_2)
-        T_1_2 = translation(0, 0, 0.039) @ rotation_y(3*pi/2) @ rotation_z(theta2)
+        T_1_2 = translation(0, 0, 0.039) @ rotation_y(3*pi/2) @ rotation_z(theta2) # Changed Z translation from 0.00039 to 0.039
 
         # T_2_3 (leg_front_r_2 to leg_front_r_3)
         T_2_3 = translation(0, -0.0494, 0.0685) @ rotation_y(pi/2) @rotation_z(theta3)
