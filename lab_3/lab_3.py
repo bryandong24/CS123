@@ -110,38 +110,42 @@ class InverseKinematics(Node):
     def inverse_kinematics(self, target_ee, initial_guess=[0, 0, 0]):
         def cost_function(theta):
             # Compute the cost function and the L1 norm of the error
-            # return the cost and the L1 norm of the error
-            ################################################################################################
-            # TODO: Implement the cost function
-            ################################################################################################
-            return None, None
+            current_ee = self.forward_kinematics(*theta)
+            error = target_ee - current_ee
+            l1_norm = np.abs(error)
+            cost = np.sum(l1_norm**2)  # squared 2-norm of the error vector
+            return cost, l1_norm
 
         def gradient(theta, epsilon=1e-3):
             # Compute the gradient of the cost function using finite differences
-            ################################################################################################
-            # TODO: Implement the gradient computation
-            ################################################################################################
-            return
+            grad = np.zeros_like(theta)
+            for i in range(len(theta)):
+                theta_plus = theta.copy()
+                theta_plus[i] += epsilon
+                cost_plus, _ = cost_function(theta_plus)
+                
+                theta_minus = theta.copy()
+                theta_minus[i] -= epsilon
+                cost_minus, _ = cost_function(theta_minus)
+                
+                grad[i] = (cost_plus - cost_minus) / (2 * epsilon)
+            return grad
 
         theta = np.array(initial_guess)
-        learning_rate = None # TODO: Set the learning rate
-        max_iterations = None # TODO: Set the maximum number of iterations
-        tolerance = None # TODO: Set the tolerance for the L1 norm of the error
+        learning_rate = 0.01  # Set the learning rate
+        max_iterations = 1000  # Set the maximum number of iterations
+        tolerance = 1e-3  # Set the tolerance for the L1 norm of the error
 
         cost_l = []
         for _ in range(max_iterations):
             grad = gradient(theta)
 
             # Update the theta (parameters) using the gradient and the learning rate
-            ################################################################################################
-            # TODO: Implement the gradient update
-            # TODO (BONUS): Implement the (quasi-)Newton's method for faster convergence
-            theta -= None
-            ################################################################################################
+            theta -= learning_rate * grad
 
             cost, l1 = cost_function(theta)
-            # cost_l.append(cost)
-            if l1.mean() < tolerance:
+            cost_l.append(cost)
+            if np.mean(l1) < tolerance:
                 break
 
         # print(f'Cost: {cost_l}')
