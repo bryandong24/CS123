@@ -153,12 +153,19 @@ class InverseKinematics(Node):
         return theta
 
     def interpolate_triangle(self, t):
-        # Intepolate between the three triangle positions in the self.ee_triangle_positions
+        # Interpolate between the three triangle positions in the self.ee_triangle_positions
         # based on the current time t
-        ################################################################################################
-        # TODO: Implement the interpolation function
-        ################################################################################################
-        return
+        t_normalized = t % 3  # Normalize t to repeat every 3 seconds
+        
+        if t_normalized < 1:
+            # Interpolate between vertex 1 and 2
+            return np.interp(t_normalized, [0, 1], [self.ee_triangle_positions[0], self.ee_triangle_positions[1]])
+        elif t_normalized < 2:
+            # Interpolate between vertex 2 and 3
+            return np.interp(t_normalized - 1, [0, 1], [self.ee_triangle_positions[1], self.ee_triangle_positions[2]])
+        else:
+            # Interpolate between vertex 3 and 1
+            return np.interp(t_normalized - 2, [0, 1], [self.ee_triangle_positions[2], self.ee_triangle_positions[0]])
 
     def ik_timer_callback(self):
         if self.joint_positions is not None:
@@ -167,9 +174,7 @@ class InverseKinematics(Node):
             current_ee = self.forward_kinematics(*self.joint_positions)
 
             # update the current time for the triangle interpolation
-            ################################################################################################
-            # TODO: Implement the time update
-            ################################################################################################
+            self.t += self.ik_timer_period
             
             self.get_logger().info(f'Target EE: {target_ee}, Current EE: {current_ee}, Target Angles: {self.target_joint_positions}, Target Angles to EE: {self.forward_kinematics(*self.target_joint_positions)}, Current Angles: {self.joint_positions}')
 
