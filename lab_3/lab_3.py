@@ -114,19 +114,20 @@ class InverseKinematics(Node):
             error = target_ee - current_ee
             l1_norm = np.abs(error)
             cost = np.sum(l1_norm**2)  # squared 2-norm of the error vector
-            return cost, l1_norm
+            return cost
 
         def gradient(theta, epsilon=1e-3):
+            # TODO: Implement the gradient computation            
             # Compute the gradient of the cost function using finite differences
             grad = np.zeros_like(theta)
             for i in range(len(theta)):
                 theta_plus = theta.copy()
                 theta_plus[i] += epsilon
-                cost_plus, _ = cost_function(theta_plus)
+                cost_plus = cost_function(theta_plus)
                 
                 theta_minus = theta.copy()
                 theta_minus[i] -= epsilon
-                cost_minus, _ = cost_function(theta_minus)
+                cost_minus = cost_function(theta_minus)
                 
                 grad[i] = (cost_plus - cost_minus) / (2 * epsilon)
             return grad
@@ -139,6 +140,12 @@ class InverseKinematics(Node):
         cost_l = []
         for _ in range(max_iterations):
             grad = gradient(theta)
+            ################################################################################################
+            # TODO: Implement the gradient update
+            # TODO (BONUS): Implement the (quasi-)Newton's method for faster convergence
+            # theta -= None
+            ################################################################################################
+
 
             # Update the theta (parameters) using the gradient and the learning rate
             theta -= learning_rate * grad
