@@ -166,13 +166,22 @@ class InverseKinematics(Node):
         
         if t_normalized < 1:
             # Interpolate between vertex 1 and 2
-            return np.interp(t_normalized, [0, 1], [self.ee_triangle_positions[0], self.ee_triangle_positions[1]])
+            x = np.interp(t_normalized, [0,1], [self.ee_triangle_positions[0][0], self.ee_triangle_positions[1][0]])[0]
+            y = 0
+            z = np.interp(t_normalized, [0,1], [self.ee_triangle_positions[0][2], self.ee_triangle_positions[1][2]])[0]
+            return np.array(x, y, z)
         elif t_normalized < 2:
             # Interpolate between vertex 2 and 3
-            return np.interp(t_normalized - 1, [0, 1], [self.ee_triangle_positions[1], self.ee_triangle_positions[2]])
+            x = np.interp(t_normalized, [1,2], [self.ee_triangle_positions[1][0], self.ee_triangle_positions[2][0]])[0]
+            y = 0
+            y = np.interp(t_normalized, [1,2], [self.ee_triangle_positions[1][2], self.ee_triangle_positions[2][2]])[0]
+            return np.array(x, y, z)
         else:
             # Interpolate between vertex 3 and 1
-            return np.interp(t_normalized - 2, [0, 1], [self.ee_triangle_positions[2], self.ee_triangle_positions[0]])
+            x = np.interp(t_normalized, [2,3], [self.ee_triangle_positions[2][0], self.ee_triangle_positions[0][0]])[0]
+            y = 0
+            y = np.interp(t_normalized, [2,3], [self.ee_triangle_positions[2][2], self.ee_triangle_positions[0][2]])[0]
+            return np.array(x, y, z)
 
     def ik_timer_callback(self):
         if self.joint_positions is not None:
