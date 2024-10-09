@@ -6,7 +6,7 @@ import numpy as np
 from math import pi
 np.set_printoptions(precision=3, suppress=True)
 
-Kp = 3
+Kp = 1
 Kd = 0.1
 
 class InverseKinematics(Node):
@@ -114,7 +114,7 @@ class InverseKinematics(Node):
             error = target_ee - current_ee
             l1_norm = np.abs(error)
             cost = np.sum(l1_norm**2)  # squared 2-norm of the error vector
-            return cost
+            return cost, l1_norm
 
         def gradient(theta, epsilon=1e-3):
             # TODO: Implement the gradient computation            
@@ -123,11 +123,11 @@ class InverseKinematics(Node):
             for i in range(len(theta)):
                 theta_plus = theta.copy()
                 theta_plus[i] += epsilon
-                cost_plus = cost_function(theta_plus)
+                cost_plus, l1 = cost_function(theta_plus)
                 
                 theta_minus = theta.copy()
                 theta_minus[i] -= epsilon
-                cost_minus = cost_function(theta_minus)
+                cost_minus, l1 = cost_function(theta_minus)
                 
                 grad[i] = (cost_plus - cost_minus) / (2 * epsilon)
             return grad
@@ -166,22 +166,22 @@ class InverseKinematics(Node):
         
         if t_normalized < 1:
             # Interpolate between vertex 1 and 2
-            x = np.interp(t_normalized, [0,1], [self.ee_triangle_positions[0][0], self.ee_triangle_positions[1][0]])[0]
+            x = np.interp(t_normalized, [0,1], [self.ee_triangle_positions[0][0], self.ee_triangle_positions[1][0]])
             y = 0
-            z = np.interp(t_normalized, [0,1], [self.ee_triangle_positions[0][2], self.ee_triangle_positions[1][2]])[0]
-            return np.array(x, y, z)
+            z = np.interp(t_normalized, [0,1], [self.ee_triangle_positions[0][2], self.ee_triangle_positions[1][2]])
+            return np.array([x, y, z])
         elif t_normalized < 2:
             # Interpolate between vertex 2 and 3
-            x = np.interp(t_normalized, [1,2], [self.ee_triangle_positions[1][0], self.ee_triangle_positions[2][0]])[0]
+            x = np.interp(t_normalized, [1,2], [self.ee_triangle_positions[1][0], self.ee_triangle_positions[2][0]])
             y = 0
-            y = np.interp(t_normalized, [1,2], [self.ee_triangle_positions[1][2], self.ee_triangle_positions[2][2]])[0]
-            return np.array(x, y, z)
+            z = np.interp(t_normalized, [1,2], [self.ee_triangle_positions[1][2], self.ee_triangle_positions[2][2]])
+            return np.array([x, y, z])
         else:
             # Interpolate between vertex 3 and 1
-            x = np.interp(t_normalized, [2,3], [self.ee_triangle_positions[2][0], self.ee_triangle_positions[0][0]])[0]
+            x = np.interp(t_normalized, [2,3], [self.ee_triangle_positions[2][0], self.ee_triangle_positions[0][0]])
             y = 0
-            y = np.interp(t_normalized, [2,3], [self.ee_triangle_positions[2][2], self.ee_triangle_positions[0][2]])[0]
-            return np.array(x, y, z)
+            z = np.interp(t_normalized, [2,3], [self.ee_triangle_positions[2][2], self.ee_triangle_positions[0][2]])
+            return np.array([x, y, z])
 
     def ik_timer_callback(self):
         if self.joint_positions is not None:
@@ -195,7 +195,7 @@ class InverseKinematics(Node):
             self.get_logger().info(f'Target EE: {target_ee}, Current EE: {current_ee}, Target Angles: {self.target_joint_positions}, Target Angles to EE: {self.forward_kinematics(*self.target_joint_positions)}, Current Angles: {self.joint_positions}')
 
     def pd_timer_callback(self):
-        if self.joint_positions is not None:
+        if self.target_joint_positions is not None:
 
             command_msg = Float64MultiArray()
             command_msg.data = self.target_joint_positions.tolist()
