@@ -174,25 +174,46 @@ class InverseKinematics(Node):
 
         def cost_function(theta):
             current_position = leg_forward_kinematics(theta)
+            error = target_ee - current_ee
+            l1_norm = np.abs(error)
+            cost = np.sum(l1_norm**2)  # squared 2-norm of the error vector
+            return cost, l1_norm
             ################################################################################################
             # TODO: [already done] paste lab 3 inverse kinematics here
             ################################################################################################
-            return None, None
 
         def gradient(theta, epsilon=1e-3):
             grad = np.zeros(3)
+            for i in range(len(theta)):
+                theta_plus = theta.copy()
+                theta_plus[i] += epsilon
+                cost_plus, l1 = cost_function(theta_plus)
+
+                theta_minus = theta.copy()
+                theta_minus[i] -= epsilon
+                cost_minus, l1 = cost_function(theta_minus)
+
+                grad[i] = (cost_plus - cost_minus) / (2 * epsilon)
             ################################################################################################
             # TODO: [already done] paste lab 3 inverse kinematics here
             ################################################################################################
             return grad
 
         theta = np.array(initial_guess)
-        learning_rate = None # TODO:[already done] paste lab 3 inverse kinematics here
-        max_iterations = None # TODO: [already done] paste lab 3 inverse kinematics here
-        tolerance = None # TODO: [already done] paste lab 3 inverse kinematics here
+        learning_rate = 10 # TODO:[already done] paste lab 3 inverse kinematics here
+        max_iterations = 50 # TODO: [already done] paste lab 3 inverse kinematics here
+        tolerance = 1e-3 # TODO: [already done] paste lab 3 inverse kinematics here
 
         cost_l = []
         for _ in range(max_iterations):
+            grad = gradient(theta)
+            theta -= learning_rate * grad
+            ################################################################################################
+
+            cost, l1 = cost_function(theta)
+            # cost_l.append(cost)
+            if l1.mean() < tolerance:
+                break
             ################################################################################################
             # TODO: [already done] paste lab 3 inverse kinematics here
             ################################################################################################
