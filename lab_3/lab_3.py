@@ -199,10 +199,10 @@ class InverseKinematics(Node):
 
    def pd_timer_callback(self):
        if self.target_joint_positions is not None:
-
-           command_msg = Float64MultiArray()
-           command_msg.data = self.target_joint_positions.tolist()
-           self.command_publisher.publish(command_msg)
+            torques = Kp*(target_ee - current_ee) + Kd*(0 - joint_velocities)
+            command_msg = Float64MultiArray()
+            command_msg.data = torques.tolist()
+            self.command_publisher.publish(command_msg)
 
 def main():
    rclpy.init()
