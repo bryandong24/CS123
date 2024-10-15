@@ -5,6 +5,9 @@ from std_msgs.msg import Float64MultiArray
 import numpy as np
 np.set_printoptions(precision=3, suppress=True)
 
+Kp = 3
+Kd = 0.1
+
 def rotation_x(angle):
     return np.array([
                     [1, 0, 0, 0],
@@ -61,12 +64,12 @@ class InverseKinematics(Node):
         self.counter = 0
 
         # Trotting gate positions, already implemented
-        touch_down_position = np.array([0.05, 0.0, -0.14])
+        touch_down_position = np.array([0.05, 0.0, -0.14]) #INCREASE X VALUE TO MAKE TRIANGLE HAVE LONGER BASE
         stand_position_1 = np.array([0.025, 0.0, -0.14])
         stand_position_2 = np.array([0.0, 0.0, -0.14])
         stand_position_3 = np.array([-0.025, 0.0, -0.14])
-        liftoff_position = np.array([-0.05, 0.0, -0.14])
-        mid_swing_position = np.array([0.0, 0.0, -0.05])
+        liftoff_position = np.array([-0.05, 0.0, -0.14]) #DECREASE X VALUE TO MAKE TRIANGLE HAVE LONGER BASE
+        mid_swing_position = np.array([0.0, 0.0, -0.05]) #INCREASE Z VALUE IF YOU WANT A HIGHER GAIT
         
         ## trotting
         # TODO: Implement each leg’s trajectory in the trotting gait.
@@ -311,8 +314,9 @@ class InverseKinematics(Node):
 
     def pd_timer_callback(self):
         if self.target_joint_positions is not None:
+            torques = Kp*(self.current_target - self.target_joint_positions) + Kd*(0 - self.joint_velocities)
             command_msg = Float64MultiArray()
-            command_msg.data = self.target_joint_positions.tolist()
+            command_msg.data = torques.tolist()
             self.command_publisher.publish(command_msg)
 
 def main():
