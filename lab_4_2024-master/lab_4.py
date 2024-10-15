@@ -245,8 +245,32 @@ class InverseKinematics(Node):
         ################################################################################################
         # TODO: implement interpolation for all 4 legs here
         ################################################################################################
-        
-        return
+        #
+        if leg_index in [0, 3]:  # Front right and back left
+                phase_offset = 0  # Start this pair at t=0
+        else:  # Front left and back right
+            phase_offset = 0.5  # Start this pair halfway through the cycle
+
+        # Normalize time based on the phase offset
+        t_leg = (t + phase_offset) % 1.0
+
+        # Number of triangle points (your trajectory points)
+        num_positions = len(self.ee_triangle_positions[leg_index])
+
+        # Find the two nearest key points in the trajectory
+        segment_length = 1.0 / num_positions  # Each segment is equally spaced
+        segment_index = int(t_leg / segment_length)
+        t_segment = (t_leg % segment_length) / segment_length
+
+        # Get the start and end positions for the current segment
+        start_position = self.ee_triangle_positions[leg_index][segment_index]
+        end_position = self.ee_triangle_positions[leg_index][(segment_index + 1) % num_positions]
+
+        # Interpolate between the start and end positions
+        interpolated_position = (1 - t_segment) * start_position + t_segment * end_position
+
+        return interpolated_position
+
 
     def cache_target_joint_positions(self):
         # Calculate and store the target joint positions for a cycle and all 4 legs
