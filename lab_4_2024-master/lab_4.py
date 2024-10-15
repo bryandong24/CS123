@@ -246,30 +246,51 @@ class InverseKinematics(Node):
         # TODO: implement interpolation for all 4 legs here
         ################################################################################################
         #
-        if leg_index in [0, 3]:  # Front right and back left
-                phase_offset = 0  # Start this pair at t=0
-        else:  # Front left and back right
-            phase_offset = 0.5  # Start this pair halfway through the cycle
+        def interpolate_triangle(self, t, leg_index):
+        # Normalize t to repeat every 6 seconds (full gait cycle)
+        t_normalized = t % 6.0
 
-        # Normalize time based on the phase offset
-        t_leg = (t + phase_offset) % 1.0
+        # Define phase shifts for each leg
+        phase_shifts = [0, 3, 3, 0]  # FR, FL, BR, BL
 
-        # Number of triangle points (your trajectory points)
-        num_positions = len(self.ee_triangle_positions[leg_index])
+        # Apply phase shift
+        t_shifted = (t_normalized + phase_shifts[leg_index]) % 6.0
 
-        # Find the two nearest key points in the trajectory
-        segment_length = 1.0 / num_positions  # Each segment is equally spaced
-        segment_index = int(t_leg / segment_length)
-        t_segment = (t_leg % segment_length) / segment_length
+        # Get the triangle positions for the current leg
+        leg_positions = self.ee_triangle_positions[leg_index]
 
-        # Get the start and end positions for the current segment
-        start_position = self.ee_triangle_positions[leg_index][segment_index]
-        end_position = self.ee_triangle_positions[leg_index][(segment_index + 1) % num_positions]
+        if t_shifted < 1:
+            x = np.interp(t_shifted, [0, 1], [leg_positions[0][0], leg_positions[1][0]])
+            y = 0
+            z = np.interp(t_shifted, [0, 1], [leg_positions[0][2], leg_positions[1][2]])
+        elif t_shifted < 2:
+            # Interpolate between touch down and stand position 1
+            x = np.interp(t_shifted, [1, 2], [leg_positions[1][0], leg_positions[2][0]])
+            y = 0
+            z = np.interp(t_shifted, [1, 2], [leg_positions[1][2], leg_positions[2][2]])
+        elif t_shifted < 3:
+            # Interpolate between stand position 1 and stand position 2
+            x = np.interp(t_shifted, [2, 3], [leg_positions[2][0], leg_positions[3][0]])
+            y = 0
+            z = np.interp(t_shifted, [2, 3], [leg_positions[2][2], leg_positions[3][2]])
+        elif t_shifted < 4:
+            # Interpolate between stand position 2 and stand position 3
+            x = np.interp(t_shifted, [3, 4], [leg_positions[3][0], leg_positions[4][0]])
+            y = 0
+            z = np.interp(t_shifted, [3, 4], [leg_positions[3][2], leg_positions[4][2]])
+        elif t_shifted < 5:
+            # Interpolate between stand position 3 and liftoff position
+            x = np.interp(t_shifted, [4, 5], [leg_positions[4][0], leg_positions[5][0]])
+            y = 0
+            z = np.interp(t_shifted, [4, 5], [leg_positions[4][2], leg_positions[5][2]])
+        else:
+            # Interpolate between liftoff position and mid swing position
+            x = np.interp(t_shifted, [5, 6], [leg_positions[5][0], leg_positions[0][0]])
+            y = 0
+            z = np.interp(t_shifted, [5, 6], [leg_positions[5][2], leg_positions[0][2]])
 
-        # Interpolate between the start and end positions
-        interpolated_position = (1 - t_segment) * start_position + t_segment * end_position
+        return np.array([x, y, z])
 
-        return interpolated_position
 
 
     def cache_target_joint_positions(self):
