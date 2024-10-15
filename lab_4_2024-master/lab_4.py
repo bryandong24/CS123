@@ -236,22 +236,23 @@ class InverseKinematics(Node):
         #
         def interpolate_triangle(self, t, leg_index):
         # Normalize t to repeat every 6 seconds (full gait cycle)
-        t_normalized = t % 6.0
+        cycle_time = 6.0
+        t_normalized = t % cycle_time
 
         # Define phase shifts for each leg
-        phase_shifts = [0, 3, 3, 0]  # FR, FL, BR, BL
+        phase_shifts = [0, cycle_time/2, cycle_time/2, 0]  # FR, FL, BR, BL
 
         # Apply phase shift
-        t_shifted = (t_normalized + phase_shifts[leg_index]) % 6.0
+        t_shifted = (t_normalized + phase_shifts[leg_index]) % cycle_time
 
         # Get the triangle positions for the current leg
         leg_positions = self.ee_triangle_positions[leg_index]
 
-        if t_shifted < 3:
+        if t_shifted < cycle_time/2.0:
             x = np.interp(t_shifted, [0, 1], [leg_positions[0][0], leg_positions[1][0]])
             y = 0
             z = np.interp(t_shifted, [0, 1], [leg_positions[0][2], leg_positions[1][2]])
-        elif t_shifted < 4.5:
+        elif t_shifted < cycle_time*3.0/4.0:
             # Interpolate between touch down and stand position 1
             x = np.interp(t_shifted, [1, 2], [leg_positions[1][0], leg_positions[2][0]])
             y = 0
