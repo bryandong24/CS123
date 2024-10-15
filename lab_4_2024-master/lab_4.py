@@ -75,39 +75,27 @@ class InverseKinematics(Node):
         rf_ee_offset = np.array([0.06, -0.09, 0])
         rf_ee_triangle_positions = np.array([
             touch_down_position,
-            stand_position_1,
-            stand_position_2,
-            stand_position_3,
             liftoff_position,
             mid_swing_position
         ]) + rf_ee_offset
 
         lf_ee_offset = np.array([0.06, 0.09, 0])
         lf_ee_triangle_positions = np.array([
-            liftoff_position,
-            mid_swing_position,
             touch_down_position,
-            stand_position_1,
-            stand_position_2,
-            stand_position_3
+            liftoff_position,
+            mid_swing_position
         ]) + lf_ee_offset
 
         rb_ee_offset = np.array([-0.11, -0.09, 0])
         rb_ee_triangle_positions = np.array([
-            liftoff_position,
-            mid_swing_position,
             touch_down_position,
-            stand_position_1,
-            stand_position_2,
-            stand_position_3
+            liftoff_position,
+            mid_swing_position
         ]) + rb_ee_offset
 
         lb_ee_offset = np.array([-0.11, 0.09, 0])
         lb_ee_triangle_positions = np.array([
             touch_down_position,
-            stand_position_1,
-            stand_position_2,
-            stand_position_3,
             liftoff_position,
             mid_swing_position
         ]) + lb_ee_offset
@@ -259,35 +247,20 @@ class InverseKinematics(Node):
         # Get the triangle positions for the current leg
         leg_positions = self.ee_triangle_positions[leg_index]
 
-        if t_shifted < 1:
+        if t_shifted < 3:
             x = np.interp(t_shifted, [0, 1], [leg_positions[0][0], leg_positions[1][0]])
             y = 0
             z = np.interp(t_shifted, [0, 1], [leg_positions[0][2], leg_positions[1][2]])
-        elif t_shifted < 2:
+        elif t_shifted < 4.5:
             # Interpolate between touch down and stand position 1
             x = np.interp(t_shifted, [1, 2], [leg_positions[1][0], leg_positions[2][0]])
             y = 0
             z = np.interp(t_shifted, [1, 2], [leg_positions[1][2], leg_positions[2][2]])
-        elif t_shifted < 3:
-            # Interpolate between stand position 1 and stand position 2
-            x = np.interp(t_shifted, [2, 3], [leg_positions[2][0], leg_positions[3][0]])
-            y = 0
-            z = np.interp(t_shifted, [2, 3], [leg_positions[2][2], leg_positions[3][2]])
-        elif t_shifted < 4:
-            # Interpolate between stand position 2 and stand position 3
-            x = np.interp(t_shifted, [3, 4], [leg_positions[3][0], leg_positions[4][0]])
-            y = 0
-            z = np.interp(t_shifted, [3, 4], [leg_positions[3][2], leg_positions[4][2]])
-        elif t_shifted < 5:
-            # Interpolate between stand position 3 and liftoff position
-            x = np.interp(t_shifted, [4, 5], [leg_positions[4][0], leg_positions[5][0]])
-            y = 0
-            z = np.interp(t_shifted, [4, 5], [leg_positions[4][2], leg_positions[5][2]])
         else:
             # Interpolate between liftoff position and mid swing position
-            x = np.interp(t_shifted, [5, 6], [leg_positions[5][0], leg_positions[0][0]])
+            x = np.interp(t_shifted, [2, 3], [leg_positions[2][0], leg_positions[0][0]])
             y = 0
-            z = np.interp(t_shifted, [5, 6], [leg_positions[5][2], leg_positions[0][2]])
+            z = np.interp(t_shifted, [2, 3], [leg_positions[2][2], leg_positions[0][2]])
 
         return np.array([x, y, z])
 
