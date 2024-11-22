@@ -12,7 +12,7 @@ IMAGE_WIDTH = 1400
 #ALL CONSTANTS WITH TODO NEXT TO THEM ARE NOT SET YET 1 IS A RANDOM CONSTANT
 TIMEOUT = 1 #TODO threshold in timer_callback
 SEARCH_YAW_VEL = .5 #TODO searching constant
-TRACK_FORWARD_VEL = .25 #TODO tracking constant
+TRACK_FORWARD_VEL = 1 #TODO tracking constant
 KP = 1 #TODO proportional gain for tracking
 
 class State(Enum):
@@ -43,6 +43,7 @@ class StateMachineNode(Node):
         self.kp = 1 # TODO
         self.center_x = 0
         self.time = 0
+        self.person_width = 0
 
     def detection_callback(self, msg):
         """
@@ -52,11 +53,13 @@ class StateMachineNode(Node):
         if msg.detections:
             best_idx = -1
             closest_x = 2
+            closest_width = 0
             for dct_idx in range(len(msg.detections)):
                 x = ((((msg.detections[dct_idx].bbox).center).position).x)
                 x_val_norm = (2*x - IMAGE_WIDTH)/IMAGE_WIDTH
                 if abs(x_val_norm) < closest_x:
                     closest_x = x_val_norm
+                    closest_width = ((msg.detections[dct_idx].bbox).width) # we are unsure if bbox.width works - allison and bryan 
                     best_idx = dct_idx
             
             # import pdb; pdb.set_trace()
@@ -64,6 +67,7 @@ class StateMachineNode(Node):
             print("closest to center position is: ")            
             print(closest_x)
             self.center_x = closest_x
+            self.person_width = closest_width
             self.time = msg.header.stamp.sec + msg.header.stamp.nanosec*(10**-9)
             print("timestamp:")
             print(self.time)
@@ -89,8 +93,11 @@ class StateMachineNode(Node):
         elif self.state == State.TRACK:
             K_p = 1.5
             yaw_command = -K_p*self.center_x
-            forward_vel_command = TRACK_FORWARD_VEL
-
+            # Makes the robot move forward if the person is far away 
+            if self.person_width < IMAGE_WIDTH / 3:   # modify this if the pupper gets too close / too far
+                forward_vel_command = TRACK_FORWARD_VEL
+            else:
+                forward_vel_command = 0
         cmd = Twist()
         cmd.angular.z = yaw_command
         cmd.linear.x = forward_vel_command
